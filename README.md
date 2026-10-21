@@ -1,7 +1,7 @@
 # MIDC / CivitCORE — Cucumber BDD (Playwright + TypeScript)
 
-Cucumber BDD suite for the MIDC / CivitCORE portal: Department Management, Designation Management
-and Location Category Management.
+Cucumber BDD suite for the MIDC / CivitCORE portal: Department Management, Designation Management,
+Location Category Management and Location Management.
 Feature files describe behaviour in business language; all technical detail (locators,
 waits, assertions) lives in TypeScript page objects and step definitions.
 
@@ -52,9 +52,11 @@ later, or set `BROWSER_EXECUTABLE_PATH` to a local Chrome/Chromium.
 | `npm run test:search` / `npm run test:logout` | `@search-department` / `@logout` |
 | `npm run test:designation` | `@Designation` (isolated sessions) |
 | `npm run test:location-category` | `@location_category` (isolated sessions) |
+| `npm run test:location` | `@location and not @location_category` (isolated sessions) |
 | `npm run test:sequential` | Ordered 11-feature Department run, one shared browser and login |
 | `npm run test:designation:sequential` | Login, 9 Designation features, logout in one shared session |
 | `npm run test:location-category:sequential` | Location Category features in one shared session |
+| `npm run test:location:sequential` | Location features in one shared session |
 | `npm run test:chromium` / `test:firefox` / `test:webkit` / `test:all-browsers` | Run via `scripts/run-browsers.js` |
 | `npm run test:parallel` | All scenarios on 4 workers |
 | `npm run test:report` | Cleans old output, runs all scenarios, then builds the Allure HTML report |
@@ -103,6 +105,7 @@ features/
   department_management_features/   Department Gherkin features (one per original spec file)
   designation_management_features/  Designation features (FRD vocabulary)
   location_category_features/       Location Category features (FRD vocabulary)
+  location_features/                Location features (FRD vocabulary)
 src/
   pages/                       Page objects
     MidcHomePage.ts            ┐ Rebuilt from the specs; same public API as the
@@ -114,6 +117,7 @@ src/
     DepartmentFlows.ts         Multi-step helpers from the specs (addDepartment, createDepartment, openEditDialog)
     designation/               Designation page objects (see below)
     location_category/         Location Category page objects (see below)
+    location/                  Location page objects (see below)
   steps/                       Step definitions, grouped by domain
   support/
     config.ts                  Reads all environment settings (.env)
@@ -208,6 +212,68 @@ cucumber.js                    Cucumber profiles
 - **Skipped by design** (reason is logged): scenarios that need a View / Detail screen or the Location Category
   ID in the UI; the Activity Log feature (no such screen; the `@audit_log` hook fails instead of skipping once an
   entry point appears); scenarios that need a second user.
+
+## Location Management
+
+`features/location_features/` is written in FRD vocabulary against a fictional 12-record baseline
+(INDIA > Gujarat/Maharashtra/Bihar > districts > 2 cities). Run it with `npm run test:location` (tag
+`@location and not @location_category`, since Location Category's own files carry an unrelated
+`@location_category` tag that must stay excluded) or, in one shared login, `npm run test:location:sequential`.
+
+- **Layout**: page objects in `src/pages/location/`, steps in `src/steps/location_steps/`. Steps used by
+  more than one feature are in `common.steps.ts`; `helpers.ts` holds the building blocks and `hooks.ts` the
+  clean-up and the three "feature doesn't exist in this build" skip hooks.
+
+  | Feature file | Steps (`src/steps/location_steps/`) | Page objects (`src/pages/location/`) |
+  |---|---|---|
+  | `location_management_initiation` | `initiation.steps.ts` | `LocationListPage` (also navigation) |
+  | `location_permissions` | `permissions.steps.ts` | `LocationListPage`, `LocationApi` |
+  | `location_search_view` | `search-view.steps.ts` | `LocationListPage` |
+  | `location_creation` | `creation.steps.ts` | `LocationFormDialog`, `LocationApi` |
+  | `location_update` | `update.steps.ts` | `LocationFormDialog`, `LocationApi` |
+  | `location_ui` | `ui.steps.ts` | `LocationListPage`, `LocationFormDialog` |
+  | `location_deletion` | `deletion.steps.ts` | `LocationDeletionPage` |
+  | `office_association` | `office-association.steps.ts` | `LocationOfficePage` (entry-point probe only) |
+  | `product_consumption` | `product-consumption.steps.ts` | none (no product is reachable; see below) |
+  | `audit_log` | `audit-log.steps.ts` | `LocationActivityLogPage` (entry-point probe only) |
+
+  All of them hang off `world.pages.location` (`LocationPages`), with per-scenario state in
+  `world.location` (`src/support/location-scenario.ts`). Several generic phrases (`I click Save`, `I enter
+  Short Name "X"`, `the toaster "X" should be displayed`, `I expand the hierarchy`, `I enter "X" in the
+  search box`, ...) are reused verbatim by `features/location_category_features`; because Cucumber step text
+  is global, the *first* module to register the phrase (Location Category, in every case here) owns a single
+  shared step that dispatches to whichever module's form/list is actually open, instead of each module
+  registering its own colliding regex.
+- **Vocabulary** (`src/test-data/location.data.ts`): Short Name = *Location Code* (live limit **20**
+  characters, not the FRD's 30), Parent Location Category = *Parent Category*. Add/Edit Location has
+  **no Region field** at all — confirmed live, "Region" is only one more value inside the Location Category
+  select, unrelated to the FRD's Region concept. The row menu has **Edit and Delete only** (no View / Detail
+  screen, no system-generated ID anywhere in the UI); the grid has per-column filters (Location Name, Loc
+  Code, Category) instead of one search box.
+- **Test data**: the live master holds ~2,700 real Locations and none of the FRD's 12-record baseline, so
+  each scenario creates its own copy of a baseline Location the first time it is named (through the API,
+  parents first); the clean-up hook removes them afterwards, deepest first. Names carry a per-scenario
+  suffix (`Gujarat Bdd12345678`); Location Codes carry a 4-digit suffix when they have room within the
+  20-character limit. Real data is never edited or deleted. If a run is killed, leftovers can be found by
+  filtering the Location grid's Location Name column for `Bdd`.
+- **Optional users**: the same `MIDC_VIEWER_*` / `MIDC_EDITOR_*` / `MIDC_NOACCESS_*` / `MIDC_AUDITOR_*`
+  credentials Location Category uses (see `.env.example`); without them (or in a shared session) the
+  scenarios that need them are skipped with the reason in the report.
+- **Skipped by design** (reason is logged in the report, and the relevant hook fails instead of skipping
+  once the gap closes):
+  - **`office_association.feature`** (all scenarios) — the live Add/Edit Office form (`Office *`, `Office
+    Code *`, `Office Category *`, `Parent Category`, `Parent Office`) has no field referencing a Location at
+    all; Office and Location are independent hierarchies with no association to test in this build.
+  - **`product_consumption.feature`** (all scenarios) — CivitBUILD and CivitINFRA are not reachable from
+    this portal: no link, menu entry or URL for either product exists anywhere, and no credentials for them
+    are configured.
+  - **`audit_log.feature`** (all scenarios) — no Activity / Audit Log screen exists for Location Management
+    in this build (same tab strip as Location Category, which already established this).
+  - Individual scenarios whose precondition needs a Location "associated with an Office" (for the same
+    reason as `office_association.feature`) or a second (Admin) session seeding data for a different role to
+    act on (same precedent as Location Category's own Editor-delete scenario).
+  - Region-only scenarios (dropdown values, Region validation) — no Region field exists to test; a bare
+    `I select Region "X"` step inside an otherwise-real scenario is logged as a no-op instead.
 
 ## Writing scenarios
 

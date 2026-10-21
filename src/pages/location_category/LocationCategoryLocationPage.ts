@@ -10,7 +10,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../../utils/assertions';
 import { API_ORG_ID } from '../../test-data/location-category.data';
-import type { MastersManagementPage } from '../MastersManagementPage';
+import type { MastersManagementPage } from '../department_pages/MastersManagementPage';
 import { SUBMIT_TIMEOUT, type ApiResult, type LocationCategoryApi } from './LocationCategoryApi';
 import { exactText, type LocationCategoryListPage } from './LocationCategoryListPage';
 

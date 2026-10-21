@@ -10,7 +10,7 @@
  *   api          getHierarchy / create / update / delete traffic and authenticated replay
  */
 import type { Page } from '@playwright/test';
-import type { MastersManagementPage } from '../MastersManagementPage';
+import type { MastersManagementPage } from '../department_pages/MastersManagementPage';
 import { LocationCategoryActivityLogPage } from './LocationCategoryActivityLogPage';
 import { LocationCategoryApi } from './LocationCategoryApi';
 import { LocationCategoryDeletionPage } from './LocationCategoryDeletionPage';

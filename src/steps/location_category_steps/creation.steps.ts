@@ -287,8 +287,10 @@ When(/^I submit a create request with a Parent Category ID that does not exist i
   this.locationCategory.apiResult = await this.pages.locationCategory.api.create(tamperedCreate(this, json));
 });
 
+// Also used verbatim by features/location_features; dispatched to whichever module's last API result applies
+// (a scenario only ever populates one of the two).
 Then(/^the request should be rejected with "([^"]*)"$/, function (this: CustomWorld, message: string) {
-  const result = this.locationCategory.apiResult!;
+  const result = this.locationCategory.apiResult ?? this.location.apiResult!;
   expect(result.status, `the API answered ${result.status} ${result.message}`).toBeGreaterThanOrEqual(400);
   this.log(`Rejected as "${message}" in the FRD; the app answered ${result.status}: ${result.message}`);
 });
@@ -302,12 +304,20 @@ When(/^I read the created record, if any$/, async function (this: CustomWorld) {
 });
 
 Then(
+  // Also used verbatim by features/location_features; dispatched to whichever module's last API result applies.
   /^either the request should be rejected, or the custom ID should be ignored and the system should generate its own ID$/,
   function (this: CustomWorld) {
-    const result = this.locationCategory.apiResult as { status: number; message: string; id?: number };
+    if (this.locationCategory.apiResult) {
+      const result = this.locationCategory.apiResult as { status: number; message: string; id?: number };
+      if (result.status >= 300) return;
+      expect(result.id, 'the system generated its own numeric id').toEqual(expect.any(Number));
+      expect(String(result.id)).not.toBe('LC-CUSTOM-001');
+      return;
+    }
+    const result = this.location.apiResult as { status: number; message: string; id?: number };
     if (result.status >= 300) return;
     expect(result.id, 'the system generated its own numeric id').toEqual(expect.any(Number));
-    expect(String(result.id)).not.toBe('LC-CUSTOM-001');
+    expect(String(result.id)).not.toBe('LOC-ABC');
   },
 );
 

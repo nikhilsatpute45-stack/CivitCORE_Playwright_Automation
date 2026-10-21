@@ -43,7 +43,13 @@ async function displayedNames(world: CustomWorld): Promise<string[]> {
 // Search (F_0009, F_0010, F_0012, F_0013, N_0004)
 // ---------------------------------------------------------------------------
 
+// Also used verbatim by features/location_features, whose own "I search" step (not "I click Search") does the
+// actual filtering afterward; this just records the text when that module's list is the one open.
 When(/^I enter "([^"]*)" in the search box$/, async function (this: CustomWorld, text: string) {
+  if (await this.pages.location.list.isListVisible()) {
+    this.location.scratch.searchText = text;
+    return;
+  }
   await search(this, text);
 });
 
@@ -87,13 +93,22 @@ Then(/^the results should contain "([^"]*)" and "([^"]*)"$/, async function (thi
   }
 });
 
+// Also used verbatim by features/location_features; dispatched to whichever module's list is actually open.
 Then(/^no records should be displayed$/, async function (this: CustomWorld) {
+  if (await this.pages.location.list.isListVisible()) {
+    await this.pages.location.list.expectEmptyState();
+    return;
+  }
   expect(await this.pages.locationCategory.list.gridRows()).toEqual([]);
 });
 
+// Also used verbatim by features/location_features; dispatched to whichever module's list is actually open.
 Then(/^no error or exception should occur$/, async function (this: CustomWorld) {
-  const { list } = this.pages.locationCategory;
-  await list.expectUsable();
+  if (await this.pages.location.list.isListVisible()) {
+    await this.pages.location.list.expectUsable();
+  } else {
+    await this.pages.locationCategory.list.expectUsable();
+  }
   expect(this.apiErrors, 'failed API calls').toEqual([]);
 });
 

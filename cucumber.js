@@ -12,6 +12,10 @@
  *                                           -> login, the 8 Location Category features, logout, in that order,
  *                                              sharing ONE browser + ONE login
  *                                              (see `npm run test:location-category:sequential`)
+ *            npx cucumber-js -p location-sequential
+ *                                           -> login, the 10 Location features, logout, in that order,
+ *                                              sharing ONE browser + ONE login
+ *                                              (see `npm run test:location:sequential`)
  *
  * A single run produces:
  *   reports/html/index.html        Cucumber HTML report (open with `npm run report:open`)
@@ -123,6 +127,22 @@ const locationCategorySequentialPaths = [
   'features/department_management_features/logout.feature',
 ];
 
+/** Ordered Location run: login, the 10 Location features, logout (same shared session). */
+const locationSequentialPaths = [
+  'features/department_management_features/department-login.feature',
+  'features/location_features/location_management_initiation.feature',
+  'features/location_features/location_permissions.feature',
+  'features/location_features/location_search_view.feature',
+  'features/location_features/location_creation.feature',
+  'features/location_features/location_update.feature',
+  'features/location_features/location_ui.feature',
+  'features/location_features/office_association.feature',
+  'features/location_features/product_consumption.feature',
+  'features/location_features/location_deletion.feature',
+  'features/location_features/audit_log.feature',
+  'features/department_management_features/logout.feature',
+];
+
 const sequential = {
   ...common,
   paths: sequentialPaths,
@@ -151,5 +171,9 @@ module.exports = {
   'location-category-sequential': {
     ...sequential,
     paths: locationCategorySequentialPaths,
+  },
+  'location-sequential': {
+    ...sequential,
+    paths: locationSequentialPaths,
   },
 };

@@ -23,6 +23,7 @@ import {
   skipBecause,
   unreachable,
 } from './helpers';
+import { freshMaster as freshLocationMaster } from '../location_steps/helpers';
 
 /** Creates a Location carrying the scenario's suffix, tagged to the scenario's copy of `frdCategory`. */
 export async function createLocation(world: CustomWorld, frdLocation: string, frdCategory: string): Promise<void> {
@@ -228,7 +229,14 @@ Then(/^(?:the final confirmation prompt|no confirmation prompt) should (?:not )?
   await this.pages.locationCategory.deletion.expectNoConfirmation();
 });
 
+// Also used verbatim by features/location_features; dispatched to whichever module's fixture applies.
 Then(/^"([^"]*)" should (?:still exist|remain)(?: in the master)?$/, async function (this: CustomWorld, frdName: string) {
+  if (!this.locationCategory.fixture(frdName) && this.location.fixture(frdName)) {
+    const fixture = this.location.fixture(frdName)!;
+    const master = await freshLocationMaster(this);
+    expect(master.some((record) => record.id === fixture.id), `"${fixture.name}" is still in the master`).toBe(true);
+    return;
+  }
   await expectStillInMaster(this, frdName);
 });
 

@@ -12,7 +12,8 @@
  */
 import type { Locator, Page } from '@playwright/test';
 import { escapeRegExp, expect } from '../../utils/assertions';
-import type { MastersManagementPage } from '../MastersManagementPage';
+import { designationColumnHeaders } from '../../test-data/designation.data';
+import type { MastersManagementPage } from '../department_pages/MastersManagementPage';
 import type { DesignationApiMonitor } from './DesignationApiMonitor';
 
 export type RowAction = 'View' | 'Edit' | 'Delete';
@@ -55,13 +56,16 @@ export class DesignationListPage {
     this.designationTab = page.locator('.task-tab-base').filter({ hasText: /^\s*Designation\s*$/ });
     this.organizationPlaceholder = page.getByText('Select Organization Name');
 
-    // The Add / Edit dialog holds its own "Reporting To" tree grid, so the list grid is the one with a Short Name column.
-    this.grid = page.getByRole('treegrid').filter({ has: page.getByRole('columnheader', { name: 'Short Name' }) });
+    // The Add / Edit dialog holds its own "Reporting To" tree grid, so the list grid is the one with
+    // the Abbreviation column (rendered as "Desig Code" by the MIDC build).
+    this.grid = page
+      .getByRole('treegrid')
+      .filter({ has: page.getByRole('columnheader', { name: designationColumnHeaders.Abbreviation }) });
     this.dataRows = this.grid.locator('.ag-center-cols-container [role="row"]');
     // Each row's Hierarchy cell has its own "+Add Designation" button, hence the exact match.
     this.addButton = page.getByTestId('tabs').getByRole('button', { name: 'Add Designation', exact: true });
     this.nameFilter = page.getByRole('textbox', { name: 'Designation Name Filter Input' });
-    this.shortNameFilter = page.getByRole('textbox', { name: 'Short Name Filter Input' });
+    this.shortNameFilter = page.getByRole('textbox', { name: `${designationColumnHeaders.Abbreviation} Filter Input` });
     // AG Grid only gives the summary role="status" while rows are shown; the panel class is the fallback.
     this.paginationSummary = page
       .getByRole('status')

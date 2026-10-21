@@ -12,6 +12,7 @@ import { Given, Then, When } from '@cucumber/cucumber';
 import type { CustomWorld } from '../../support/world';
 import { expect } from '../../utils/assertions';
 import { locationCategoryMessagePattern } from '../../test-data/location-category.data';
+import { locationMessagePattern } from '../../test-data/location.data';
 import {
   describeOutcome,
   ensureBaseline,
@@ -29,6 +30,22 @@ import {
   uniqueName,
   uniqueShortName,
 } from './helpers';
+import {
+  describeOutcome as describeLocationOutcome,
+  submitForm as submitLocationForm,
+  uniqueCode as uniqueLocationCode,
+  uniqueName as uniqueLocationName,
+} from '../location_steps/helpers';
+
+/**
+ * Cucumber step text is global: features/location_features reuses this exact phrasing ("I enter Short Name",
+ * "I click Save", "the toaster ... should be displayed"). Rather than duplicate near-identical regexes (which
+ * Cucumber would then refuse to run as ambiguous), these three shared steps dispatch to whichever module's
+ * form is actually open. Only one module's form is ever open within a given scenario.
+ */
+async function isLocationFormOpen(world: CustomWorld): Promise<boolean> {
+  return world.pages.location.form.isOpen();
+}
 
 // ---------------------------------------------------------------------------
 // Session and navigation
@@ -102,6 +119,12 @@ When(/^I enter Location Category Name "([^"]*)"$/, async function (this: CustomW
 });
 
 When(/^I enter Short Name "([^"]*)"$/, async function (this: CustomWorld, value: string) {
+  if (await isLocationFormOpen(this)) {
+    const typed = uniqueLocationCode(this, value);
+    await this.pages.location.form.type('Location Code', typed);
+    this.location.entered.code = typed;
+    return;
+  }
   const typed = uniqueShortName(this, value);
   await this.pages.locationCategory.form.type('Short Name', typed);
   this.locationCategory.entered.shortName = typed;
@@ -113,6 +136,11 @@ When(/^I leave Location Category Name blank$/, async function (this: CustomWorld
 });
 
 When(/^I leave Short Name blank$/, async function (this: CustomWorld) {
+  if (await isLocationFormOpen(this)) {
+    await this.pages.location.form.clear('Location Code');
+    this.location.entered.code = '';
+    return;
+  }
   await this.pages.locationCategory.form.clear('Short Name');
   this.locationCategory.entered.shortName = '';
 });
@@ -141,6 +169,10 @@ When(/^I clear the Parent Category$/, async function (this: CustomWorld) {
 });
 
 When(/^I click Save$/, async function (this: CustomWorld) {
+  if (await isLocationFormOpen(this)) {
+    await submitLocationForm(this);
+    return;
+  }
   if (this.locationCategory.scratch.saveSuppressed) {
     // The Parent option the scenario tried to pick is not offered, so there is nothing to save.
     this.locationCategory.lastOutcome = undefined;
@@ -194,18 +226,35 @@ When(
 );
 
 When(/^I change Name to "([^"]*)"$/, async function (this: CustomWorld, value: string) {
+  if (await isLocationFormOpen(this)) {
+    const typed = uniqueLocationName(this, value);
+    await this.pages.location.form.type('Location', typed);
+    this.location.entered.name = typed;
+    return;
+  }
   const typed = uniqueName(this, value);
   await this.pages.locationCategory.form.type('Location Category Name', typed);
   this.locationCategory.entered.name = typed;
 });
 
 When(/^I change Short Name to "([^"]*)"$/, async function (this: CustomWorld, value: string) {
+  if (await isLocationFormOpen(this)) {
+    const typed = uniqueLocationCode(this, value);
+    await this.pages.location.form.type('Location Code', typed);
+    this.location.entered.code = typed;
+    return;
+  }
   const typed = uniqueShortName(this, value);
   await this.pages.locationCategory.form.type('Short Name', typed);
   this.locationCategory.entered.shortName = typed;
 });
 
 When(/^I clear the Name field$/, async function (this: CustomWorld) {
+  if (await isLocationFormOpen(this)) {
+    await this.pages.location.form.clear('Location');
+    this.location.entered.name = '';
+    return;
+  }
   await this.pages.locationCategory.form.clear('Location Category Name');
   this.locationCategory.entered.name = '';
 });
@@ -215,9 +264,12 @@ When(/^I clear the Name field$/, async function (this: CustomWorld) {
 // ---------------------------------------------------------------------------
 
 Then(/^the toaster "([^"]*)" should be (?:shown|displayed)$/, async function (this: CustomWorld, message: string) {
-  const pattern = locationCategoryMessagePattern(message);
+  // The message text itself tells the two modules apart ("Location Category ..." vs "Location ..."), so
+  // both modules' alias patterns are tried rather than detecting which form is (or was) open.
+  const pattern = new RegExp(`${locationCategoryMessagePattern(message).source}|${locationMessagePattern(message).source}`, 'i');
   const seen = await this.sawMessage(pattern, 15000);
-  expect(seen, `toaster "${message}" appeared; toasters seen: ${JSON.stringify(this.seenToasts)}; outcome: ${describeOutcome(this.locationCategory.lastOutcome)}`).toBe(true);
+  const outcome = (await isLocationFormOpen(this)) ? describeLocationOutcome(this.location.lastOutcome) : describeOutcome(this.locationCategory.lastOutcome);
+  expect(seen, `toaster "${message}" appeared; toasters seen: ${JSON.stringify(this.seenToasts)}; outcome: ${outcome}`).toBe(true);
 });
 
 Then(/^the message "([^"]*)" should be displayed$/, async function (this: CustomWorld, message: string) {

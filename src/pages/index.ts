@@ -1,11 +1,14 @@
-export { MidcHomePage } from './MidcHomePage';
-export { DepartmentLoginPage } from './DepartmentLoginPage';
-export { MastersManagementPage } from './MastersManagementPage';
-export { DepartmentListPage } from './DepartmentListPage';
-export { DepartmentDialog } from './DepartmentDialog';
-export { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
-export { DepartmentFlows } from './DepartmentFlows';
-export { LogoutPage } from './LogoutPage';
+export {
+  MidcHomePage,
+  DepartmentLoginPage,
+  MastersManagementPage,
+  DepartmentListPage,
+  DepartmentDialog,
+  DeleteConfirmationDialog,
+  DepartmentFlows,
+  LogoutPage,
+  PositionPage,
+} from './department_pages';
 export { DesignationPages } from './designation';
-export { PositionPage } from './PositionPage';
 export { LocationCategoryPages } from './location_category';
+export { LocationPages } from './location';

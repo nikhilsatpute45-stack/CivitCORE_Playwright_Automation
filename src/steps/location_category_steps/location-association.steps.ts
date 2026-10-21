@@ -51,7 +51,13 @@ When(/^I open Add Location$/, async function (this: CustomWorld) {
   await openAddLocation(this);
 });
 
+// Also used verbatim by features/location_features (the standalone Location module's own Location Category
+// select is the same kind of field); dispatched to whichever form is actually open.
 When(/^I open the Location Category dropdown$/, async function (this: CustomWorld) {
+  if (await this.pages.location.form.isOpen()) {
+    this.location.scratch.categoryOptions = await this.pages.location.form.categoryOptions();
+    return;
+  }
   this.locationCategory.scratch.options = await this.pages.locationCategory.location.categoryOptions();
   this.locationCategory.scratch.masterNames = (await freshMaster(this)).map((record) => record.name);
 });
@@ -221,8 +227,9 @@ When(/^I check the Locations list$/, async function (this: CustomWorld) {
   this.locationCategory.scratch.allLocations = await this.pages.locationCategory.location.fetchLocations();
 });
 
+// Also used verbatim by features/location_features; dispatched to whichever module's last API result applies.
 Then(/^the request should be rejected$/, function (this: CustomWorld) {
-  const result = this.locationCategory.apiResult!;
+  const result = this.locationCategory.apiResult ?? this.location.apiResult!;
   expect(result.status, `the API answered ${result.status} ${result.message}`).toBeGreaterThanOrEqual(400);
 });
 

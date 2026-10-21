@@ -9,11 +9,12 @@
  *  - the row action menu is plain markup (.menu-item), exactly as in the Department and Designation grids.
  *
  * The build offers no View / Detail screen and no global search box: the row menu is Edit + Delete and
- * the grid has per-column floating filters (Location Category, Short Name, Prod Code).
+ * the grid has per-column floating filters (Location Category, Short Name). The Loc Cat Code column
+ * has no floating filter of its own; it is the stable column used to detect the list grid has loaded.
  */
 import type { Locator, Page } from '@playwright/test';
 import { escapeRegExp, expect } from '../../utils/assertions';
-import type { MastersManagementPage } from '../MastersManagementPage';
+import type { MastersManagementPage } from '../department_pages/MastersManagementPage';
 import type { LocationCategoryApi } from './LocationCategoryApi';
 
 export type RowAction = 'Edit' | 'Delete';
@@ -69,7 +70,7 @@ export class LocationCategoryListPage {
     this.locationTab = page.locator('.task-tab-base').filter({ hasText: /^\s*Location\s*$/ });
     this.organizationPlaceholder = page.getByText('Select Organization Name');
 
-    this.grid = page.getByRole('treegrid').filter({ has: page.getByRole('columnheader', { name: 'Prod Code' }) });
+    this.grid = page.getByRole('treegrid').filter({ has: page.getByRole('columnheader', { name: 'Loc Cat Code' }) });
     this.dataRows = this.grid.locator('.ag-center-cols-container [role="row"]');
     this.addButton = page.getByRole('button', { name: 'Add Location Category', exact: true });
     this.nameFilter = page.getByRole('textbox', { name: 'Location Category Filter Input' });

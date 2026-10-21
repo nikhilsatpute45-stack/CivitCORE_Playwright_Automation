@@ -11,6 +11,7 @@ import { Then, When } from '@cucumber/cucumber';
 import type { CustomWorld } from '../../support/world';
 import { expect } from '../../utils/assertions';
 import { locationCategoryMessagePattern } from '../../test-data/location-category.data';
+import { freshMaster as freshLocationMaster, returnToList as returnToLocationList } from '../location_steps/helpers';
 import {
   ensureCategory,
   freshMaster,
@@ -136,7 +137,14 @@ When(/^I open the hierarchy$/, async function (this: CustomWorld) {
   await showHierarchy(this);
 });
 
+// Also used verbatim by features/location_features; dispatched to whichever module's list is actually open.
 When(/^I expand the hierarchy$/, async function (this: CustomWorld) {
+  if (await this.pages.location.list.isListVisible()) {
+    await returnToLocationList(this);
+    await this.pages.location.list.useLargestPageSize();
+    await this.pages.location.list.expandAll();
+    return;
+  }
   await showHierarchy(this);
 });
 
@@ -307,7 +315,12 @@ When(/^I submit an update for "([^"]*)" including a different id in the payload$
   this.locationCategory.apiResult = await api.send(template.method as 'PUT' | 'POST' | 'PATCH', template.url, body);
 });
 
+// Also used verbatim by features/location_features; dispatched to whichever module's state applies.
 When(/^I re-read the record$/, async function (this: CustomWorld) {
+  if (this.location.apiResult !== undefined) {
+    this.location.scratch.reread = await freshLocationMaster(this);
+    return;
+  }
   this.locationCategory.scratch.master = await freshMaster(this);
 });
 

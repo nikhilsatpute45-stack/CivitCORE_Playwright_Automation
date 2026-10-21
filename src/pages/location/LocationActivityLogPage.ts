@@ -1,0 +1,28 @@
+/**
+ * Location Activity / Audit Log (feature: audit_log.feature).
+ *
+ * The Location Category module (the same Organization Configuration tab strip: Department, Designation,
+ * Location Category, Location, Office Category, Office, Position, Industrial Area) already confirmed it has
+ * no Activity Log screen. This page only probes for an entry point, so the scenarios are skipped while none
+ * exists and fail loudly once one appears (at which point the log steps must be automated against the real
+ * screen) - same convention as LocationCategoryActivityLogPage.
+ */
+import type { Locator, Page } from '@playwright/test';
+
+const ACTIVITY_LOG_NAME = /activity\s*log|audit\s*(log|trail)/i;
+
+export class LocationActivityLogPage {
+  readonly entryPoint: Locator;
+
+  constructor(page: Page) {
+    this.entryPoint = page
+      .getByRole('button', { name: ACTIVITY_LOG_NAME })
+      .or(page.getByRole('tab', { name: ACTIVITY_LOG_NAME }))
+      .or(page.getByRole('link', { name: ACTIVITY_LOG_NAME }))
+      .or(page.locator('.task-tab-base, .menu-item').filter({ hasText: ACTIVITY_LOG_NAME }));
+  }
+
+  async isAvailable(): Promise<boolean> {
+    return (await this.entryPoint.count()) > 0;
+  }
+}

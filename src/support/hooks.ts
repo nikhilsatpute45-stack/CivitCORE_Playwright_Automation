@@ -126,7 +126,7 @@ After({ name: 'ALLURE_FIXTURE_IGNORE' }, async function (this: CustomWorld, { pi
   if (!this.context) return;
   const failed = result?.status === Status.FAILED;
   const baseName = `${safeFileName(pickle.name)}_${Date.now()}`;
-  const video = this.hasPage && !this.page.isClosed() ? this.page.video() : undefined;
+  const video = (this.hasPage && !this.page.isClosed() ? this.page.video() : undefined) ?? undefined;
 
   // In shared-session mode the context (and the login) survives until AfterAll; only this
   // scenario's page is closed, which is what finalises its video file.

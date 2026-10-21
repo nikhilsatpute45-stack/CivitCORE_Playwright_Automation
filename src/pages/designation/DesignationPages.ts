@@ -15,8 +15,8 @@
  * plus `form`, the Add / Edit dialog shared by creation and update.
  */
 import type { Page } from '@playwright/test';
-import type { MastersManagementPage } from '../MastersManagementPage';
-import type { PositionPage } from '../PositionPage';
+import type { MastersManagementPage } from '../department_pages/MastersManagementPage';
+import type { PositionPage } from '../department_pages/PositionPage';
 import { DesignationAccessPage } from './DesignationAccessPage';
 import { DesignationActivityLogPage } from './DesignationActivityLogPage';
 import { DesignationApiMonitor } from './DesignationApiMonitor';

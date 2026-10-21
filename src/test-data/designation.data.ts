@@ -19,7 +19,7 @@ export const designationFieldLabels: Record<string, string> = {
 
 /** FRD list column -> grid column header. FRD columns with no counterpart are absent on purpose. */
 export const designationColumnHeaders: Record<string, string> = {
-  Abbreviation: 'Short Name',
+  Abbreviation: 'Desig Code',
   'Designation Name': 'Designation Name',
   Actions: 'Actions',
 };

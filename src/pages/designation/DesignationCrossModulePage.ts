@@ -8,7 +8,7 @@
  *  - Other Civit products (CivitBUILD) are not reachable from this portal.
  */
 import { expect } from '../../utils/assertions';
-import type { PositionPage } from '../PositionPage';
+import type { PositionPage } from '../department_pages/PositionPage';
 
 export interface PostLookupContext {
   organization: string;
