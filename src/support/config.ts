@@ -81,6 +81,16 @@ export const config = {
 
   /** Assert FRD message copy verbatim instead of the app's equivalent (see designation.data.ts). */
   strictFrdMessages: readBoolean('STRICT_FRD_MESSAGES', false),
+
+  /** Audit Trail run switches (features/audit_trail_features); every one is opt-in. */
+  auditTrail: {
+    /** True when the environment holds the workbook baseline (entries #1-#14, dated relative to the run date). */
+    baselineSeeded: readBoolean('AUDIT_TRAIL_BASELINE_SEEDED', false),
+    /** True to allow scenarios that execute Clear Log, which permanently deletes audit entries. */
+    allowDestructive: readBoolean('AUDIT_TRAIL_ALLOW_DESTRUCTIVE', false),
+    /** Optional absolute URL of the Audit Trail screen, used by "open the URL directly" and for navigation. */
+    url: readString('AUDIT_TRAIL_URL'),
+  },
 } as const;
 
 /**
