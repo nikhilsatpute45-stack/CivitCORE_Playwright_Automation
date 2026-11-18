@@ -68,7 +68,7 @@ When(/^(?:In the Role Admin account|As Role Admin) .+$/, async function (this: C
   return skipBecause(this, SKIP.roleManagement);
 });
 
-When(/^(?:In Session [AB]|In another session|In the first session|Session [AB]:) .+$/, async function (this: CustomWorld): Skippable {
+When(/^(?:In Session [AB]|In another session map|In the first session|Session [AB]:) .+$/, async function (this: CustomWorld): Skippable {
   return skipBecause(this, SKIP.secondSession);
 });
 
