@@ -10,7 +10,10 @@ import { SKIP } from '../../test-data/miscellaneous-master.data';
 import { enterField } from './inputs';
 import { openEditFor, saveForm, skipBecause, testDatum, withTc, type Skippable } from './helpers';
 
-When(/^the user edits ('[^']*'.*|it: .+)$/, async function (this: CustomWorld, text: string): Skippable {
+/** The Misc-only forms of "edits ..." (Contractor Category's own "edits 'Class-V' Description ..." sentences must not match). */
+const EDIT_FORMS = String.raw`'[^']*'(?: \(Enum ID (?:\d+|blank)\)| \(child '[^']*', grandchild '[^']*'\)| and (?:change Field Title(?: to '[^']*')?|clear Enum ID; save|change Enum ID (?:to \d+; save|from \d+ to \d+)|enter Enum ID \d+; save; open Vendor Registration form|check Display))?|it: change Field Title and Enum ID, then Save`;
+
+When(new RegExp(`^the user edits (${EDIT_FORMS})$`), async function (this: CustomWorld, text: string): Skippable {
   const scenario = mmScenario(this);
   const { form } = mmPages(this);
   const named = /^'([^']*)'/.exec(text)?.[1];

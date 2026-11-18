@@ -15,11 +15,15 @@
  *    the close (X) icon [of the dialog] | on an empty area of the page outside the menu"
  *   "the user presses the Esc key"
  *   "the user selects Delete on '<title>'"
+ *   the outcome sentences listed in OUTCOME_SENTENCES_SHARED_WITH_CONTRACT_CATEGORY (outcome_sentences.ts), which Contractor
+ *   Category's broad outcome step also matches ("Toaster '...' is displayed", "Menu shows ...", "Page 1 shows ...", ...)
  */
-import { Given, When } from '@cucumber/cucumber';
+import { Given, Then, When } from '@cucumber/cucumber';
 import type { CustomWorld } from '../../support/world';
 import { mmPages, mmScenario } from '../../support/miscellaneous-master-scenario';
 import { SKIP } from '../../test-data/miscellaneous-master.data';
+import { OUTCOME_SENTENCES_SHARED_WITH_CONTRACT_CATEGORY } from './outcome_sentences';
+import { verifyOutcome } from './outcomes';
 import { openAddForm, openRowMenuAndSelect, requireBaseline, rememberGrid, saveForm, skipBecause, withToast, withTc, type Skippable } from './helpers';
 
 /**
@@ -73,4 +77,8 @@ When(/^the user selects Delete on '([^']*)'$/, async function (this: CustomWorld
   await rememberGrid(this);
   // A blocked delete shows an error toaster instead of the confirmation dialog, so the toaster is captured too.
   await withToast(this, () => openRowMenuAndSelect(this, title, 'Delete'), 4000);
+});
+
+Then(new RegExp(`^(${OUTCOME_SENTENCES_SHARED_WITH_CONTRACT_CATEGORY.join('|')})$`), async function (this: CustomWorld, text: string): Skippable {
+  return verifyOutcome(this, text);
 });
